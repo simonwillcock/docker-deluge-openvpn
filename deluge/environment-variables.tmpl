@@ -1,0 +1,28 @@
+#! /bin/sh
+
+export DELUGE_PASSWORD={{ .Env.DELUGE_PASSWORD }}
+export DELUGE_USERNAME={{ .Env.DELUGE_USERNAME }}
+export DELUGE_PEER_PORT={{ .Env.DELUGE_PEER_PORT }}
+export DELUGE_PEER_PORT_RANDOM_HIGH={{ .Env.DELUGE_PEER_PORT_RANDOM_HIGH }}
+export DELUGE_PEER_PORT_RANDOM_LOW={{ .Env.DELUGE_PEER_PORT_RANDOM_LOW }}
+export DELUGE_PEER_PORT_RANDOM_ON_START={{ .Env.DELUGE_PEER_PORT_RANDOM_ON_START }}
+export DELUGE_RPC_PORT={{ .Env.DELUGE_RPC_PORT }}
+export DELUGE_DOWNLOAD_DIR={{ .Env.DELUGE_DOWNLOAD_DIR }}
+export DELUGE_INCOMPLETE_DIR={{ .Env.DELUGE_INCOMPLETE_DIR }}
+export DELUGE_WATCH_DIR={{ .Env.DELUGE_WATCH_DIR }}
+export DELUGE_HOME={{ .Env.DELUGE_HOME }}
+
+# Deluge needs to know which VPN provider is used
+export OPENVPN_PROVIDER={{ .Env.OPENVPN_PROVIDER }}
+
+export ENABLE_UFW={{ .Env.ENABLE_UFW }}
+
+export PUID={{ .Env.PUID }}
+export PGID={{ .Env.PGID }}
+
+# Need to pass through our tinyproxy settings
+export WEBPROXY_ENABLED={{ .Env.WEBPROXY_ENABLED }}
+export WEBPROXY_PORT={{ .Env.WEBPROXY_PORT }}
+
+# Support dropping the default route after connection
+export DROP_DEFAULT_ROUTE={{ .Env.DROP_DEFAULT_ROUTE }}
