@@ -1,22 +1,21 @@
-# OpenVPN and Transmission with WebUI
+# OpenVPN and Deluge with Deluge Web
 
-[![Docker Automated build](https://img.shields.io/docker/automated/haugene/transmission-openvpn.svg)](https://hub.docker.com/r/haugene/transmission-openvpn/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/haugene/transmission-openvpn.svg)](https://hub.docker.com/r/haugene/transmission-openvpn/)
-[![Join the chat at https://gitter.im/docker-transmission-openvpn/Lobby](https://badges.gitter.im/docker-transmission-openvpn/Lobby.svg)](https://gitter.im/docker-transmission-openvpn/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-
-This container contains OpenVPN and Transmission with a configuration
-where Transmission is running only when OpenVPN has an active tunnel.
+This container contains OpenVPN and Deluge with a configuration
+where Deluge is running only when OpenVPN has an active tunnel.
 It bundles configuration files for many popular VPN providers to make the setup easier.
 
-You need to specify your provider and credentials with environment variables,
+Based wholy on the work of transmission with openvpn by haugene at https://github.com/haugene/docker-transmission-openvpn
+Note also this is partially complete so your mileage may vary
+
+
+You will need to specify your provider and credentials with environment variables,
 as well as mounting volumes where the data should be stored.
 An example run command to get you going is provided below.
 
 Also worth mentioning.
-If you want to route web traffic through the same tunnel that Transmission is using there
+If you want to route web traffic through the same tunnel that Deluge is using there
 is a pre-installed Tinyproxy which will expose a proxy on port 8888 when enabled.
-And if you're using PIA as provider it will update Transmission hourly with assigned open port.
+And if you're using PIA as provider it will update Deluge hourly with assigned open port - TBC
 
 GL HF! And if you run into problems, please check the README twice and maybe try the gitter chat before opening an issue :)
 
@@ -27,7 +26,7 @@ The number of users, issues and pull-requests have gone up quite drastically sin
 and that's great! It's been a lot of fun watching the activity level go up
 and my pet project improve with it.
 
-But maintaining it takes time, and if you ever feel like donating, here's a button:
+Maintaining this takes time, so like donating, please donate to the originating author, here's a button:
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=73XHRSK65KQYC)
 
@@ -41,7 +40,7 @@ The container is available from the Docker registry and this is the simplest way
 To run the container use this command:
 
 ```
-$ docker run --cap-add=NET_ADMIN --device=/dev/net/tun -d \
+$ docker build --cap-add=NET_ADMIN --device=/dev/net/tun -d \
               -v /your/storage/path/:/data \
               -v /etc/localtime:/etc/localtime:ro \
               -e OPENVPN_PROVIDER=PIA \
@@ -53,7 +52,7 @@ $ docker run --cap-add=NET_ADMIN --device=/dev/net/tun -d \
               --log-driver json-file \
               --log-opt max-size=10m \
               -p 9091:9091 \
-              haugene/transmission-openvpn
+              uri:https://github.com/sscraggles/docker-deluge-openvpn/
 ```
 
 You must set the environment variables `OPENVPN_PROVIDER`, `OPENVPN_USERNAME` and `OPENVPN_PASSWORD` to provide basic connection details.
@@ -151,35 +150,6 @@ If TRANSMISSION_PEER_PORT_RANDOM_ON_START is enabled then it allows traffic to t
 |`UFW_ALLOW_GW_NET` | Allows the gateway network through the firewall. Off defaults to only allowing the gateway. | `UFW_ALLOW_GW_NET=true`|
 |`UFW_EXTRA_PORTS` | Allows the comma separated list of ports through the firewall. Respsects UFW_ALLOW_GW_NET. | `UFW_EXTRA_PORTS=9910,23561,443`|
 
-### Alternative web UIs
-You can override the default web UI by setting the ```TRANSMISSION_WEB_HOME``` environment variable. If set, Transmission will look there for the Web Interface files, such as the javascript, html, and graphics files.
-
-[Combustion UI](https://github.com/Secretmapper/combustion), [Kettu](https://github.com/endor/kettu) and [Transmission-Web-Control](https://github.com/ronggang/transmission-web-control/) come bundled with the container. You can enable either of them by setting```TRANSMISSION_WEB_UI=combustion```, ```TRANSMISSION_WEB_UI=kettu``` or ```TRANSMISSION_WEB_UI=transmission-web-control```, respectively. Note that this will override the ```TRANSMISSION_WEB_HOME``` variable if set.
-
-| Variable | Function | Example |
-|----------|----------|-------|
-|`TRANSMISSION_WEB_HOME` | Set Transmission web home | `TRANSMISSION_WEB_HOME=/path/to/web/ui`|
-|`TRANSMISSION_WEB_UI` | Use the specified bundled web UI | `TRANSMISSION_WEB_UI=combustion`, `TRANSMISSION_WEB_UI=kettu` or `TRANSMISSION_WEB_UI=transmission-web-control`|
-
-### Transmission configuration options
-
-You may override transmission options by setting the appropriate environment variable.
-
-The environment variables are the same name as used in the transmission settings.json file
-and follow the format given in these examples:
-
-| Transmission variable name | Environment variable name |
-|----------------------------|---------------------------|
-| `speed-limit-up` | `TRANSMISSION_SPEED_LIMIT_UP` |
-| `speed-limit-up-enabled` | `TRANSMISSION_SPEED_LIMIT_UP_ENABLED` |
-| `ratio-limit` | `TRANSMISSION_RATIO_LIMIT` |
-| `ratio-limit-enabled` | `TRANSMISSION_RATIO_LIMIT_ENABLED` |
-
-As you can see the variables are prefixed with `TRANSMISSION_`, the variable is capitalized, and `-` is converted to `_`.
-
-PS: `TRANSMISSION_BIND_ADDRESS_IPV4` will be overridden to the IP assigned to your OpenVPN tunnel interface.
-This is to prevent leaking the host IP.
-
 ### Web proxy configuration options
 
 This container also contains a web-proxy server to allow you to tunnel your web-browser traffic through the same OpenVPN tunnel.
@@ -228,18 +198,6 @@ Once /scripts is mounted you'll need to write your custom code in the following 
 
 Don't forget to include the #!/bin/bash shebang and to make the scripts executable using chmod a+x
 
-### RSS plugin
-
-The Transmission RSS plugin can optionally be run as a separate container. It allow to download torrents based on an RSS URL, see [Plugin page](https://github.com/nning/transmission-rss).
-
-```
-$ docker run -d \
-      -e "RSS_URL=<URL>" \
-      --link <transmission-container>:transmission \
-      --name "transmission-rss" \
-      haugene/transmission-rss
-```
-
 #### Use docker env file
 Another way is to use a docker env file where you can easily store all your env variables and maintain multiple configurations for different providers.
 In the GitHub repository there is a provided DockerEnv file with all the current transmission and openvpn environment variables. You can use this to create local configurations
@@ -255,24 +213,7 @@ $ docker run --cap-add=NET_ADMIN --device=/dev/net/tun -d \
               -v /etc/localtime:/etc/localtime:ro \
               --env-file /your/docker/env/file \
               -p 9091:9091 \
-              haugene/transmission-openvpn
-```
-
-## Access the WebUI
-But what's going on? My http://my-host:9091 isn't responding?
-This is because the VPN is active, and since docker is running in a different ip range than your client the response
-to your request will be treated as "non-local" traffic and therefore be routed out through the VPN interface.
-
-### How to fix this
-The container supports the `LOCAL_NETWORK` environment variable. For instance if your local network uses the IP range 192.168.0.0/24 you would pass `-e LOCAL_NETWORK=192.168.0.0/24`.
-
-Alternatively you can reverse proxy the traffic through another container, as that container would be in the docker range. There is a reverse proxy being built with the container. You can run it using the command below or have a look in the repository proxy folder for inspiration for your own custom proxy.
-
-```
-$ docker run -d \
-      --link <transmission-container>:transmission \
-      -p 8080:8080 \
-      haugene/transmission-openvpn-proxy
+              uri:https://github.com/sscraggles/docker-deluge-openvpn/
 ```
 
 ## Known issues, tips and tricks
@@ -385,8 +326,8 @@ nameserver 8.8.4.4
           -e "PUID=1234" \
           -p 9091:9091 \
           --sysctl net.ipv6.conf.all.disable_ipv6=0 \
-          --name "transmission-openvpn-syno" \
-          haugene/transmission-openvpn:latest
+          --name "deluge-openvpn-syno" \
+          uri:https://github.com/sscraggles/docker-deluge-openvpn/
 
 - To make it work after a nas restart, create an automated task in your synology web interface : go to **Settings Panel > Task Scheduler ** create a new task that run `/volume1/foldername/TUN.sh` as root (select '_root_' in 'user' selectbox). This task will start module that permit the container to run, you can make a task that run on startup. These kind of task doesn't work on my nas so I just made a task that run every minute.
 - Enjoy
@@ -427,7 +368,7 @@ ExecStart=/usr/bin/docker run \
         -p 9091:9091 \
         --dns 8.8.8.8 \
         --dns 8.8.4.4 \
-        haugene/transmission-openvpn
+        uri:https://github.com/sscraggles/docker-deluge-openvpn/
 Restart=always
 RestartSec=5
 
