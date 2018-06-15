@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Source our persisted env variables from container startup
-. /etc/transmission/environment-variables.sh
+. /etc/deluge/environment-variables.sh
 
 PROXY_CONF='/etc/tinyproxy.conf'
 

@@ -1,4 +1,4 @@
 #!/bin/sh
 
-/etc/transmission/start.sh "$@"
+/etc/deluge/start.sh "$@"
 /opt/tinyproxy/start.sh

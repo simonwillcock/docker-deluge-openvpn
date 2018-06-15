@@ -41,27 +41,27 @@ fi
 
 # add OpenVPN user/pass
 if [[ "${OPENVPN_USERNAME}" == "**None**" ]] || [[ "${OPENVPN_PASSWORD}" == "**None**" ]] ; then
-  if [[ ! -f /config/openvpn-credentials.txt ]] ; then
+  if [[ ! -f /data/openvpn-credentials.txt ]] ; then
     echo "OpenVPN credentials not set. Exiting."
     exit 1
   fi
   echo "Found existing OPENVPN credentials..."
 else
   echo "Setting OPENVPN credentials..."
-  mkdir -p /config
-  echo "${OPENVPN_USERNAME}" > /config/openvpn-credentials.txt
-  echo "${OPENVPN_PASSWORD}" >> /config/openvpn-credentials.txt
-  chmod 600 /config/openvpn-credentials.txt
+  mkdir -p /data
+  echo "${OPENVPN_USERNAME}" > /data/openvpn-credentials.txt
+  echo "${OPENVPN_PASSWORD}" >> /data/openvpn-credentials.txt
+  chmod 600 /data/openvpn-credentials.txt
 fi
 
-# add transmission credentials from env vars
-echo "${TRANSMISSION_RPC_USERNAME}" > /config/transmission-credentials.txt
-echo "${TRANSMISSION_RPC_PASSWORD}" >> /config/transmission-credentials.txt
+## add deluge credentials from env vars
+#echo "${DELUGE_RPC_USERNAME}" > /config/deluge-credentials.txt
+#echo "${DELUGE_RPC_PASSWORD}" >> /config/deluge-credentials.txt
 
-# Persist transmission settings for use by transmission-daemon
-dockerize -template /etc/transmission/environment-variables.tmpl:/etc/transmission/environment-variables.sh
+# Persist deluge settings for use by deluge-daemon
+dockerize -template /etc/deluge/environment-variables.tmpl:/etc/deluge/environment-variables.sh
 
-TRANSMISSION_CONTROL_OPTS="--script-security 2 --up-delay --up /etc/openvpn/tunnelUp.sh --down /etc/openvpn/tunnelDown.sh"
+DELUGE_CONTROL_OPTS="--script-security 2 --up-delay --up /etc/openvpn/tunnelUp.sh --down /etc/openvpn/tunnelDown.sh"
 
 ## If we use UFW or the LOCAL_NETWORK we need to grab network config info
 if [[ "${ENABLE_UFW,,}" == "true" ]] || [[ -n "${LOCAL_NETWORK-}" ]]; then
@@ -97,10 +97,10 @@ if [[ "${ENABLE_UFW,,}" == "true" ]]; then
   sed -i -e s/IPV6=yes/IPV6=no/ /etc/default/ufw
   ufw enable
 
-  if [[ "${TRANSMISSION_PEER_PORT_RANDOM_ON_START,,}" == "true" ]]; then
-    PEER_PORT="${TRANSMISSION_PEER_PORT_RANDOM_LOW}:${TRANSMISSION_PEER_PORT_RANDOM_HIGH}"
+  if [[ "${DELUGE_PEER_PORT_RANDOM_ON_START,,}" == "true" ]]; then
+    PEER_PORT="${DELUGE_PEER_PORT_RANDOM_LOW}:${DELUGE_PEER_PORT_RANDOM_HIGH}"
   else
-    PEER_PORT="${TRANSMISSION_PEER_PORT}"
+    PEER_PORT="${DELUGE_PEER_PORT}"
   fi
 
   ufwAllowPort PEER_PORT
@@ -109,9 +109,9 @@ if [[ "${ENABLE_UFW,,}" == "true" ]]; then
     ufwAllowPort WEBPROXY_PORT
   fi
   if [[ "${UFW_ALLOW_GW_NET,,}" == "true" ]]; then
-    ufwAllowPortLong TRANSMISSION_RPC_PORT GW_CIDR
+    ufwAllowPortLong DELUGE_RPC_PORT GW_CIDR
   else
-    ufwAllowPortLong TRANSMISSION_RPC_PORT GW
+    ufwAllowPortLong DELUGE_RPC_PORT GW
   fi
 
   if [[ -n "${UFW_EXTRA_PORTS-}"  ]]; then
@@ -131,7 +131,7 @@ if [[ -n "${LOCAL_NETWORK-}" ]]; then
       echo "adding route to local network ${localNet} via ${GW} dev ${INT}"
       /sbin/ip r a "${localNet}" via "${GW}" dev "${INT}"
       if [[ "${ENABLE_UFW,,}" == "true" ]]; then
-        ufwAllowPortLong TRANSMISSION_RPC_PORT localNet
+        ufwAllowPortLong DELUGE_RPC_PORT localNet
         if [[ -n "${UFW_EXTRA_PORTS-}" ]]; then
           for port in ${UFW_EXTRA_PORTS//,/ }; do
             ufwAllowPortLong port localNet
@@ -142,4 +142,4 @@ if [[ -n "${LOCAL_NETWORK-}" ]]; then
   fi
 fi
 
-exec openvpn ${TRANSMISSION_CONTROL_OPTS} ${OPENVPN_OPTS} --config "${OPENVPN_CONFIG}"
+exec openvpn ${DELUGE_CONTROL_OPTS} ${OPENVPN_OPTS} --config "${OPENVPN_CONFIG}"

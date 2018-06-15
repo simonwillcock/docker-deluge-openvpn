@@ -1,4 +1,4 @@
 #!/bin/sh
 
-/etc/transmission/stop.sh
+/etc/deluge/stop.sh
 /opt/tinyproxy/stop.sh
