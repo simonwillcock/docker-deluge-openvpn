@@ -35,8 +35,7 @@ open issues or in the gitter chat. A big thanks to everyone who has contributed 
 And if you could be interested in joining as collaborator, let me know.
 
 
-## Run container from Docker registry
-The container is available from the Docker registry and this is the simplest way to get it.
+## Run container from Github
 To run the container use this command:
 
 ```
